@@ -232,6 +232,7 @@ int main(int argc, char *argv[])
 
 
 CFileWav fw("/home/alexandr/sample-3s.wav");
+CFileWav fw2("/home/alexandr/sample-3s++.wav");
 
 auto t = fw.read();
 
@@ -241,6 +242,8 @@ int size  = get<1>(t);
 CFileWav::FMT__SUBCHUNK fmt = get<2>(t);
 
 fw.print_fmt_info();
+
+bool r = fw2.write(data,size,fmt);
 
 
 

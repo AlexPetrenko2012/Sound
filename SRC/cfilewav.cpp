@@ -81,6 +81,35 @@ std::tuple <char *, int, CFileWav::FMT__SUBCHUNK> CFileWav::read(bool without_da
 
 }
 
+
+
+bool CFileWav::write(char * data, int size, FMT__SUBCHUNK fmt)
+{
+    using FMT = FMT__SUBCHUNK;
+    using namespace std;
+
+    for (const auto &[key,value] : chanks)
+    {
+        //   const auto &[data,size] = value;
+        delete[] data;
+    }
+    chanks.clear();
+
+
+    FMT*pfmt =  new FMT(fmt);
+
+
+    chanks.insert(make_pair(fmt__ID,make_pair(reinterpret_cast<char*>(pfmt),sizeof(FMT))));
+    chanks.insert(make_pair(data_ID,make_pair(data,size)));
+
+
+    if (!_putsubchanks())
+        return false;
+
+    return true;
+}
+
+
 bool CFileRiff::_getsubchanks(bool without_data)
 {
 
@@ -92,6 +121,7 @@ bool CFileRiff::_getsubchanks(bool without_data)
         qDebug()<<file.errorString();
         return false;
     }
+
 
 
     struct{
@@ -181,6 +211,104 @@ bool CFileRiff::_getsubchanks(bool without_data)
 
     return true;
 }
+
+bool CFileRiff::_putsubchanks()
+{
+
+
+
+    QFile file (_filename);
+
+
+    if (!file.open(QIODevice::WriteOnly))
+    {
+        qDebug()<<file.errorString();
+        return false;
+    }
+
+
+    int ckSize = 0; // All chanks
+
+
+    struct{
+        uint32_t  ckID;
+        uint32_t  ckSize;
+    }subchank_header;
+
+
+    for (const auto &[key,value] : chanks)
+    {
+        const auto [data,size] = value;
+        ckSize += (size + sizeof(subchank_header));
+    }
+
+
+    struct{
+        uint32_t  ckID_riff = RIFF_ID;
+        uint32_t  ckSize = sizeof(ftID_WAVE);
+        uint32_t  ftID_WAVE = WAVE_ID;
+    }riff_chank;
+
+
+
+
+    riff_chank.ckSize += ckSize;
+
+
+
+
+    if (file.write(reinterpret_cast<char *>(&riff_chank),sizeof(riff_chank))==-1)
+    {
+        qDebug()<<file.errorString();
+        return false;
+    }
+
+
+
+
+
+
+    for (const auto &[key,value] : chanks)
+    {
+        const auto &[data,size] = value;
+
+
+        subchank_header.ckID =   key;
+        subchank_header.ckSize = size;
+
+        if (file.write(reinterpret_cast<char *>(&subchank_header),sizeof(subchank_header))==-1)
+        {
+            qDebug()<<file.errorString();
+            return false;
+        }
+
+
+        if (file.write(data,size)==-1)
+        {
+            qDebug()<<file.errorString();
+            return false;
+        }
+
+
+        // Verify the parity
+        if (size%2)
+        {
+            char null = 0;
+
+            if (file.write(&null,1)==-1)
+            {
+                qDebug()<<file.errorString();
+                return false;
+            }
+
+        }
+
+
+    }
+
+    return true;
+}
+
 
 
 

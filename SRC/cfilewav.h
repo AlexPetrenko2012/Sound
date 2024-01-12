@@ -8,7 +8,7 @@
 #include <map>
 #include  <utility>
 
-
+#include <QDebug>
 #include <cstdint>
 
 //#include "/home/alexandr/WRK/BAUER/wavreader/wav.h"
@@ -43,7 +43,6 @@ inline const char * i2a4AF(uint16_t  audioFormat)
     auto search = m.find(audioFormat);
     return (search != m.end()) ? search->second : "";
 }
-
 
 
 
