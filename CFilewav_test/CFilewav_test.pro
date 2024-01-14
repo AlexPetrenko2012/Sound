@@ -9,6 +9,7 @@ CONFIG -= app_bundle
 
 SOURCES += \
         ../SRC/cfilewav.cpp \
+        ../SRC/csinewavegenerator.cpp \
         main.cpp
 
 # Default rules for deployment.
@@ -18,4 +19,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     ../SRC/cfilewav.h \
+    ../SRC/csinewavegenerator.h \
+    ../SRC/sample_formats.h
 

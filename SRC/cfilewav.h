@@ -24,6 +24,9 @@ const int data_ID = 0x61746164;   // 'data'
 
 
 
+
+
+
 template <size_t n>
 const char * make_cstring(char arr[])
 {
@@ -44,25 +47,12 @@ inline const char * i2a4AF(uint16_t  audioFormat)
     return (search != m.end()) ? search->second : "";
 }
 
-
-
-
-
-
-struct S_FRAME_16S
-{
-    int16_t sample1;
-    int16_t sample2;
-};
-
+const int AF_PCM = 1;
 
 
 
 class CFileRiff
 {
-public:
-
-
 public:
     CFileRiff() = delete;
     CFileRiff(QString filename);
@@ -76,11 +66,9 @@ protected:
 };
 
 
-class        CFileWav : public CFileRiff
+
+class    CFileWav : public CFileRiff
 {
-
-
-
 public:
     struct FMT__SUBCHUNK
     {
@@ -92,8 +80,6 @@ public:
         uint16_t bitsPerSample;
     };
 
-
-
 public:
     CFileWav() = delete;
     CFileWav(QString filename);
@@ -101,13 +87,10 @@ public:
     void print_fmt_info ();
 
     std::tuple <char *, int, FMT__SUBCHUNK>  read(bool without_data = false);
-
     bool write(char *, int, FMT__SUBCHUNK);
 
 
-
 };
-
 
 
 

@@ -5,9 +5,9 @@
 
 #include "../SRC/cfilewav.h"
 
+#include "../SRC/csinewavegenerator.h"
 
-//#include "/home/alexandr/WRK/BAUER/wavreader/wav.h"
-#include "math.h"
+
 
 
 using namespace std;
@@ -225,53 +225,74 @@ delete[] data2;
 */
 
 
+void read_write()
+{
+    CFileWav fw_in("/home/alexandr/sample-3s.wav");
+    CFileWav fw_out("/home/alexandr/sample-3s++.wav");
 
+    auto t = fw_in.read();
+
+
+    char* data = get<0>(t);
+    int size  = get<1>(t);
+    CFileWav::FMT__SUBCHUNK fmt = get<2>(t);
+
+    fw_in.print_fmt_info();
+
+    bool r = fw_out.write(data,size,fmt);
+
+
+    delete[] data;
+
+}
+
+
+void generate_write()
+{
+
+        const int duration = 10;
+        const int frec_rate = 100;
+
+        const int sampleRate = 44100;
+        const int numChannels = 2;
+        const int bitsPerSample = 16;
+        const int blockAlign = numChannels * (bitsPerSample/8);
+        const int byteRate = (sampleRate * numChannels * bitsPerSample)/8;
+
+
+
+      CFileWav fw_out("/home/alexandr/gen_10sec.wav");
+
+      CSineWaveGenerator swg(sampleRate,numChannels,bitsPerSample);
+
+      std::pair<char*,int>  p = swg.generate(duration,frec_rate);
+
+      char* data = get<0>(p);
+      int size  = get<1>(p);
+
+
+
+      CFileWav::FMT__SUBCHUNK fmt {AF_PCM,numChannels,sampleRate,byteRate,blockAlign,bitsPerSample};
+
+
+      bool r = fw_out.write(data,size,fmt);
+
+      delete[] data;
+}
 
 int main(int argc, char *argv[])
 {
 
+//read_write();
 
-CFileWav fw("/home/alexandr/sample-3s.wav");
-CFileWav fw2("/home/alexandr/sample-3s++.wav");
-
-auto t = fw.read();
-
-
-char* data = get<0>(t);
-int size  = get<1>(t);
-CFileWav::FMT__SUBCHUNK fmt = get<2>(t);
-
-fw.print_fmt_info();
-
-bool r = fw2.write(data,size,fmt);
-
-
-
-
-//read_header(file1,header);
-//char * data = read_data(file1,header);
-//print_header(header);
+generate_write();
 
 cout << "----------------" << endl << endl;
 
-//char * data2 = generate_date(header,10,100);
-
-//write_header(file2,header);
-
-//write_data(file2,header,data2);
-
-//print_header(header);
-
-//read_header(file2,header);
-//char * data2 = read_data(file2,header);
-//print_header(header);
-
 return 0;
 
-//delete[] data;
-//delete[] data2;
 
-    QCoreApplication a(argc, argv);
+ QCoreApplication a(argc, argv);
 
     return a.exec();
 }

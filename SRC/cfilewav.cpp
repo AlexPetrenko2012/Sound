@@ -1,10 +1,7 @@
 #include "cfilewav.h"
-
 #include <iostream>
 #include <utility>
-
 #include <QString>
-
 #include <QDebug>
 
 
@@ -36,7 +33,6 @@ void CFileWav :: print_fmt_info ()
         return;
     }
 
-    // cout << "format:         " <<  make_cstring<4>(header.format) << endl;
     cout << "audioFormat:    " <<  i2a4AF(fmt.audioFormat)  <<  endl;
     cout << "numChannels:    " <<  fmt.numChannels  <<  endl;
     cout << "sampleRate:     " <<  fmt.sampleRate  <<  endl;
@@ -90,7 +86,7 @@ bool CFileWav::write(char * data, int size, FMT__SUBCHUNK fmt)
 
     for (const auto &[key,value] : chanks)
     {
-        //   const auto &[data,size] = value;
+        const auto &[data,size] = value;
         delete[] data;
     }
     chanks.clear();
@@ -114,7 +110,6 @@ bool CFileRiff::_getsubchanks(bool without_data)
 {
 
     QFile file (_filename);
-
 
     if (!file.open(QIODevice::ReadOnly))
     {
@@ -215,8 +210,6 @@ bool CFileRiff::_getsubchanks(bool without_data)
 bool CFileRiff::_putsubchanks()
 {
 
-
-
     QFile file (_filename);
 
 
@@ -238,7 +231,9 @@ bool CFileRiff::_putsubchanks()
 
     for (const auto &[key,value] : chanks)
     {
-        const auto [data,size] = value;
+       auto [data,size] = value;
+       if (size%2) // Verify the parity
+                size++;
         ckSize += (size + sizeof(subchank_header));
     }
 
@@ -251,9 +246,7 @@ bool CFileRiff::_putsubchanks()
 
 
 
-
     riff_chank.ckSize += ckSize;
-
 
 
 
@@ -262,8 +255,6 @@ bool CFileRiff::_putsubchanks()
         qDebug()<<file.errorString();
         return false;
     }
-
-
 
 
 
@@ -293,16 +284,15 @@ bool CFileRiff::_putsubchanks()
         // Verify the parity
         if (size%2)
         {
-            char null = 0;
+            char padding = 0x00;
 
-            if (file.write(&null,1)==-1)
+            if (file.write(&padding,1)==-1)
             {
                 qDebug()<<file.errorString();
                 return false;
             }
 
         }
-
 
     }
 
