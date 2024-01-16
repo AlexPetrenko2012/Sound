@@ -4,7 +4,10 @@
 #include "csinewavegenerator.h"
 #include "sample_formats.h"
 #include "math.h"
-
+#include <map>
+#include <utility>
+#include <functional>
+#include <QDebug>
 
 CSineWaveGenerator::CSineWaveGenerator(int sampleRate,
                    int numChannels,
@@ -29,19 +32,40 @@ std::cout << "numSamples / 2П = " <<  numSamples << " / 2П  = " << periods << 
 std::cout << "increm2 = " <<  increm << std::endl;
 
 
-S_FRAME_16S* sf16s = new S_FRAME_16S[numSamples];  // TODO ( other formats too)
+std::map<int32_t,std::function <void(int)>> mf;
 
-
+char* data = new char [size];
 double d=0.0;
+
+mf.insert(std::make_pair( // 16bit mono
+0x00100001,
+        [&](int i){
+        S_FRAME_16M* psf16m = reinterpret_cast<S_FRAME_16M*>(data);
+       (psf16m+i)->sample = (int16_t)(int)(sin(d)*INT16_MAX);}));
+
+mf.insert(std::make_pair( // 16bit stereo
+0x00100002,
+        [&](int i){
+        S_FRAME_16S* psf16s = reinterpret_cast<S_FRAME_16S*>(data);
+        (psf16s+i)->sample1 = (int16_t)(int)(sin(d)*INT16_MAX);
+        (psf16s+i)->sample2 = (psf16s+i)->sample1;}));
+
+int32_t format = ( _bitsPerSample << 16) | _numChannels;
+
+auto it = mf.find(format);
+if(it == mf.end())
+         {
+         qDebug() << "Not supported";
+         return std::make_pair(nullptr,0);
+         }
+auto [key,value] = *it;
+
 for (int i = 0; i<numSamples; i++)
 {
-sf16s[i].sample1 = (int16_t)(int)(sin(d)*INT16_MAX);
-sf16s[i].sample2 = sf16s[i].sample1;
-d += increm;
+    value(i);
+    d += increm;
 }
 
-
-return std::make_pair(reinterpret_cast<char*>(sf16s),size);
-
+return std::make_pair(data,size);
 
 }
